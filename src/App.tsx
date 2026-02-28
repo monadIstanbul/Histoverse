@@ -10,7 +10,6 @@ import AICards from './components/AICards/AICards';
 import VotePanel from './components/VotePanel/VotePanel';
 import BottomBar from './components/BottomBar/BottomBar';
 import Toast from './components/Toast/Toast';
-import PaymentHistory from './components/PaymentHistory/PaymentHistory';
 
 // Types
 interface GameState {
@@ -276,7 +275,7 @@ function App() {
       />
 
       {/* Main layout */}
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-144px)]">
         {/* Left Panel - Scenario Input */}
         <div className="w-96 flex-shrink-0">
           <ScenarioPanel 
@@ -311,7 +310,7 @@ function App() {
 
         {/* Right Panel - AI Cards & Voting */}
         {gameState.isActive && (
-          <div className="w-96 flex-shrink-0 flex flex-col">
+          <div className="w-96 flex-shrink-0 flex flex-col overflow-hidden">
             <>
                 <AICards 
                   predictions={gameState.predictions}
@@ -336,12 +335,7 @@ function App() {
                   onFinalize={selectedAI && !gameState.winner ? handleFinalize : undefined}
                 />
 
-                <div className="px-4 pb-4">
-                  <PaymentHistory
-                    history={payment.history.filter(r => r.roundId === gameState.round)}
-                    onClear={payment.clearHistory}
-                  />
-                </div>
+
             </>
           </div>
         )}

@@ -47,7 +47,7 @@ const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
   };
 
   return (
-    <div className="h-full panel p-6 flex flex-col space-y-6">
+    <div className="h-full panel p-6 flex flex-col space-y-6 overflow-y-auto">
       {/* Title */}
       <div>
         <h2 className="text-title text-2xl text-glow mb-2 tracking-wider">

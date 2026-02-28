@@ -39,7 +39,7 @@ const AICards: React.FC<AICardsProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* ── Header ── */}
       <div
         className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b"

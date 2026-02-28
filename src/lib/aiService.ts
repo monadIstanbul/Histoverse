@@ -54,6 +54,28 @@ Describe what today's world (year 2026) would look like if this had happened.
 Keep your response concise — under 250 words — but vivid and specific.`;
 }
 
+// ── Ollama availability cache ────────────────────────────────────────────────
+let _ollamaAvailable: boolean | null = null;
+
+async function isOllamaAvailable(): Promise<boolean> {
+  if (_ollamaAvailable !== null) return _ollamaAvailable;
+  try {
+    const healthUrl = OLLAMA_URL.startsWith('/')
+      ? `${OLLAMA_URL}/api/tags`          // vite proxy path
+      : `${OLLAMA_URL}/api/tags`;         // direct URL
+    const res = await fetch(healthUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(2_000),
+    });
+    _ollamaAvailable = res.ok;
+  } catch {
+    _ollamaAvailable = false;
+  }
+  // Reset cache after 30s so re-checks are possible
+  setTimeout(() => { _ollamaAvailable = null; }, 30_000);
+  return _ollamaAvailable;
+}
+
 // ── Ollama API call ───────────────────────────────────────────────────────────
 async function callOllama(aiId: string, scenario: string): Promise<string> {
   const endpoint = `${OLLAMA_URL}/v1/chat/completions`;
@@ -148,16 +170,22 @@ export async function generatePredictions(
   scenario: string,
   onUpdate: (id: string, result: Partial<AIPrediction>) => void
 ): Promise<void> {
+  const ollamaUp = await isOllamaAvailable();
+
   await Promise.allSettled(
     Object.keys(MOCK_DELAYS).map(async (id) => {
-      try {
-        const prediction = await callOllama(id, scenario);
-        onUpdate(id, { prediction, status: 'success' });
-      } catch (err) {
-        console.debug(`[aiService] Ollama offline for "${id}", using mock.`);
-        await delay(MOCK_DELAYS[id]);
-        onUpdate(id, { prediction: generateMockPrediction(id, scenario), status: 'success' });
+      if (ollamaUp) {
+        try {
+          const prediction = await callOllama(id, scenario);
+          onUpdate(id, { prediction, status: 'success' });
+          return;
+        } catch (err) {
+          console.debug(`[aiService] Ollama call failed for "${id}", using mock.`, err);
+        }
       }
+      // Ollama unavailable or call failed → mock
+      await delay(MOCK_DELAYS[id]);
+      onUpdate(id, { prediction: generateMockPrediction(id, scenario), status: 'success' });
     })
   );
 }
