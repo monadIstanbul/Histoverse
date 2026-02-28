@@ -1,0 +1,238 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* HISTOVERSE Design System - Vintage Parchment Theme */
+:root {
+  --void: #0d0805;           /* Ana arkaplan - koyu kahve */
+  --panel: rgba(22,14,8,0.97); /* Panel arkaplanı */
+  --border: rgba(180,145,85,0.25); /* Kenarlık - altın */
+  --glow: #c4a265;           /* Antik altın parlama */
+  --gold: #d4a520;           /* Altın (oylama, seçim) */
+  --green: #7a9e4a;          /* Zeytin yeşili (başarı) */
+  --purple: #8b5e3c;         /* Sıcak kahve (pool, ajan) */
+  --red: #a83232;            /* Bordo kırmızı */
+  --text: #d4c4a8;           /* Parşömen rengi yazı */
+  --dim: #6b5a45;            /* Soluk kahve yazı */
+  --parchment: #e8d5b0;      /* Parşömen */
+  --sepia: #a67c28;          /* Sepya */
+  --ink: #2a1810;            /* Mürekkep */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-void text-text font-rajdhani;
+    background: var(--void);
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, rgba(139, 94, 60, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(196, 162, 101, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(42, 24, 16, 0.4) 0%, transparent 50%);
+    color: var(--text);
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 400;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+  }
+}
+
+/* Vintage Paper Texture Effect */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(180,145,85,0.015) 3px,
+      rgba(180,145,85,0.015) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 50px,
+      rgba(139,94,60,0.01) 50px,
+      rgba(139,94,60,0.01) 51px
+    );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Vintage glow effects */
+.glow-border {
+  border: 1px solid var(--border);
+  box-shadow: 0 0 10px rgba(196,162,101,0.15), inset 0 1px 0 rgba(232,213,176,0.05);
+}
+
+.glow-text {
+  text-shadow: 0 0 12px rgba(196,162,101,0.4), 0 0 4px rgba(212,165,32,0.2);
+}
+
+.glow-active {
+  box-shadow: 0 0 20px rgba(196,162,101,0.3), 0 0 40px rgba(196,162,101,0.1);
+  border-color: var(--glow);
+}
+
+/* Globe container */
+.globe-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Panel styles - Vintage parchment */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  background-image: linear-gradient(135deg, rgba(232,213,176,0.02) 0%, transparent 50%, rgba(139,94,60,0.02) 100%);
+}
+
+/* Button styles - Vintage accent */
+.btn-primary {
+  @apply px-6 py-3 font-rajdhani font-semibold rounded;
+  background: linear-gradient(135deg, #c4a265, #d4a520);
+  color: var(--ink);
+  border: 1px solid rgba(232,213,176,0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(196,162,101,0.4), 0 0 40px rgba(196,162,101,0.15);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #d4b276, #e0b530);
+}
+
+.btn-gold {
+  @apply px-6 py-3 font-rajdhani font-semibold rounded;
+  background: linear-gradient(135deg, #d4a520, #a67c28);
+  color: var(--ink);
+  border: 1px solid rgba(212,165,32,0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+  box-shadow: 0 0 20px rgba(212,165,32,0.4);
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  @apply px-6 py-3 font-rajdhani font-semibold rounded;
+  background: linear-gradient(135deg, #a83232, #8b2020);
+  color: var(--parchment);
+  border: 1px solid rgba(168,50,50,0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 0 20px rgba(168,50,50,0.4);
+  transform: translateY(-2px);
+}
+
+/* Animation keyframes */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 120s linear infinite;
+}
+
+/* Loading bar */
+.loading-bar {
+  @apply w-full h-2 bg-dim rounded-full overflow-hidden;
+}
+
+.loading-bar-fill {
+  @apply h-full bg-gradient-to-r from-glow to-sepia transition-all duration-300;
+}
+
+/* Typography utilities */
+.text-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.text-subtitle {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.text-ui {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+}
+
+.text-ui-light {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 400;
+}
+
+/* Toast animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(180,145,85,0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(196,162,101,0.5);
+}
