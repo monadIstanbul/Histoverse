@@ -57,7 +57,7 @@ const VotePanel: React.FC<VotePanelProps> = ({
 
   return (
     <div
-      className="flex-shrink-0 border-t px-4 py-4 space-y-4"
+      className="border-t px-4 py-4 space-y-4"
       style={{ borderColor: 'rgba(180,145,85,0.15)', background: 'rgba(13,8,5,0.95)' }}
     >
       {/* ── Section header ── */}

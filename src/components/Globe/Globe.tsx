@@ -439,11 +439,15 @@ const Globe: React.FC<GlobeProps> = ({
 
     const onResize = () => {
       const w = container.clientWidth, h = container.clientHeight;
+      if (w === 0 || h === 0) return;
       camera.aspect = w/h; camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       overlay.width = w; overlay.height = h;
     };
     window.addEventListener('resize', onResize);
+    // Also watch the container itself for flex-layout size changes
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
 
     const canvas = renderer.domElement;
     canvas.style.cursor = 'grab';
@@ -499,6 +503,7 @@ const Globe: React.FC<GlobeProps> = ({
     return () => {
       cancelAnimationFrame(animationRef.current);
       window.removeEventListener('resize', onResize);
+      resizeObserver.disconnect();
       canvas.removeEventListener('mousedown',  onMouseDown);
       canvas.removeEventListener('mousemove',  onMouseMove);
       canvas.removeEventListener('mouseup',    onMouseUp);

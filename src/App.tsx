@@ -309,7 +309,7 @@ function App() {
         </div>
 
         {/* Center - Globe */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-hidden min-w-0">
           {(() => {
             const winnerModel = gameState.winner
               ? AI_MODELS.find(m => m.id === gameState.winner)
@@ -332,7 +332,18 @@ function App() {
 
         {/* Right Panel - AI Cards & Voting */}
         {gameState.isActive && (
-          <div className="w-96 flex-shrink-0 flex flex-col overflow-hidden">
+          <div
+            className="w-96 flex-shrink-0 border-l"
+            style={{
+              height: 'calc(100vh - 144px)',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              background: 'rgba(13,8,5,0.97)',
+              borderColor: 'rgba(180,145,85,0.2)',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(180,145,85,0.4) rgba(13,8,5,0.5)',
+            }}
+          >
             <>
                 <AICards 
                   predictions={gameState.predictions}

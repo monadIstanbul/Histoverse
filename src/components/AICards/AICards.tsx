@@ -1,4 +1,4 @@
-﻿import React, { useCallback } from 'react';
+﻿import React, { useCallback, useState } from 'react';
 import { AI_MODELS } from '../../lib/aiService';
 
 interface AICardsProps {
@@ -24,6 +24,12 @@ const AICards: React.FC<AICardsProps> = ({
 }) => {
   const totalVotes = Object.values(votes).reduce((sum, n) => sum + n, 0);
   const hasVoted = selectedAI !== null;
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = useCallback((aiId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedCards(prev => ({ ...prev, [aiId]: !prev[aiId] }));
+  }, []);
 
   const allStatuses = Object.values(predictionStatus);
   const isLoadingAny = allStatuses.some((s) => s === 'loading');
@@ -39,7 +45,7 @@ const AICards: React.FC<AICardsProps> = ({
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div>
       {/* ── Header ── */}
       <div
         className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b"
@@ -63,7 +69,7 @@ const AICards: React.FC<AICardsProps> = ({
         const wAI = AI_MODELS.find((m) => m.id === declaredWinner);
         const userWon = selectedAI === declaredWinner;
         return wAI ? (
-          <div className="flex-shrink-0 mx-3 mt-2 px-4 py-3 rounded border text-center"
+          <div className="mx-3 mt-2 px-4 py-3 rounded border text-center"
             style={{
               borderColor: userWon ? '#ef4444' : '#d4a520',
               background: userWon ? 'rgba(239,68,68,0.07)' : 'rgba(212,165,32,0.07)',
@@ -86,7 +92,7 @@ const AICards: React.FC<AICardsProps> = ({
       })()}
 
       {/* ── Cards list ── */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+      <div className="px-3 py-2 space-y-2">
         {AI_MODELS.map((ai) => {
           const prediction = predictions[ai.id];
           const status = predictionStatus[ai.id] ?? 'pending';
@@ -167,10 +173,26 @@ const AICards: React.FC<AICardsProps> = ({
                 ) : status === 'error' ? (
                   <p className="text-xs py-2" style={{ color: '#a83232' }}>⚠ Tahmin alınamadı.</p>
                 ) : prediction ? (
-                  <p className="text-xs leading-relaxed"
-                    style={{ color: isLoser ? '#4a3a28' : '#b0956a', whiteSpace: 'pre-line' }}>
-                    {prediction}
-                  </p>
+                  <div>
+                    <p className="text-xs leading-relaxed"
+                      style={{
+                        color: isLoser ? '#4a3a28' : '#b0956a',
+                        whiteSpace: 'pre-line',
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical' as const,
+                        WebkitLineClamp: expandedCards[ai.id] ? 'unset' : 4,
+                        overflow: expandedCards[ai.id] ? 'visible' : 'hidden',
+                      }}>
+                      {prediction}
+                    </p>
+                    <button
+                      onClick={(e) => toggleExpand(ai.id, e)}
+                      className="mt-1 text-xs transition-colors"
+                      style={{ color: `${ai.color}99` }}
+                    >
+                      {expandedCards[ai.id] ? '▲ Kapat' : '▼ Devamını gör'}
+                    </button>
+                  </div>
                 ) : (
                   <p className="text-xs py-2 italic" style={{ color: '#3a2a1a' }}>Senaryo bekleniyor…</p>
                 )}
