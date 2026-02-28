@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMetaMask } from './hooks/useMetaMask';
 import { usePayment } from './hooks/usePayment';
 import { CONTRACT_ADDRESS } from './lib/monadClient';
-import { generatePredictions, AI_MODELS } from './lib/aiService';
+import { generatePredictions, AI_MODELS, generateAltHistoryMap } from './lib/aiService';
+import type { AltHistoryMap } from './lib/altHistoryTypes';
 import Header from './components/Header/Header';
 import ScenarioPanel from './components/ScenarioPanel/ScenarioPanel';
 import Globe from './components/Globe/Globe';
@@ -49,6 +50,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [altHistoryMap, setAltHistoryMap] = useState<AltHistoryMap | null>(null);
 
   // Auto-connect MetaMask on page load — intentionally runs once on mount only
   useEffect(() => {
@@ -87,6 +89,7 @@ function App() {
   const handleNewRound = useCallback(() => {
     setSelectedAI(null);
     setPendingVote(null);
+    setAltHistoryMap(null);
     setGameState({
       scenario: '',
       predictions: {},
@@ -249,7 +252,7 @@ function App() {
   }, [selectedAI]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Declare winner: highest vote AI wins
-  const handleFinalize = useCallback(() => {
+  const handleFinalize = useCallback(async () => {
     const aiIds = ['gpt', 'gemini', 'claude', 'deepseek'];
     const winnerAIId = aiIds.reduce((best, id) =>
       gameState.votes[id] > gameState.votes[best] ? id : best, aiIds[0]);
@@ -261,7 +264,25 @@ function App() {
       `⚡ Yeni Dünya Düzeni: ${winnerModel?.name ?? winnerAIId} kazandı! Kazananlara fedakarlık tebriği.`,
       'success'
     );
-  }, [gameState.votes, showToast]);
+
+    // Generate alt-history map for the winning scenario
+    const winnerPrediction = gameState.predictions[winnerAIId] ?? '';
+    const winnerName = winnerModel?.name ?? winnerAIId;
+    if (gameState.scenario && winnerPrediction) {
+      showToast('🌍 Rewriting world map...', 'info');
+      try {
+        const altMap = await generateAltHistoryMap(
+          gameState.scenario,
+          winnerPrediction,
+          winnerName
+        );
+        setAltHistoryMap(altMap);
+        showToast(`🗺️ ${altMap.globeNarrative}`, 'success');
+      } catch (err) {
+        console.error('[App] Alt history map generation failed:', err);
+      }
+    }
+  }, [gameState.votes, gameState.scenario, gameState.predictions, showToast]);
 
   return (
     <div className="min-h-screen bg-void text-text overflow-hidden relative">
@@ -303,6 +324,7 @@ function App() {
                 winnerName={winnerModel?.name ?? null}
                 winnerColor={winnerModel?.color ?? null}
                 winnerPrediction={gameState.winner ? (gameState.predictions[gameState.winner] ?? null) : null}
+                altHistoryMap={altHistoryMap}
               />
             );
           })()}

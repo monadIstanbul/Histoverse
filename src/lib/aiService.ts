@@ -197,3 +197,107 @@ export const AI_MODELS: Omit<AIPrediction, 'prediction' | 'status'>[] = [
   { id: 'claude',   name: 'Claude 3.5',     icon: '🧠', color: '#c4a265', description: 'Anthropic — Deep historical reasoning'   },
   { id: 'deepseek', name: 'DeepSeek-V3',    icon: '🔍', color: '#8b5e3c', description: 'DeepSeek — Pattern & consequence mapping' },
 ];
+
+// ── Alt-History Map Generation ────────────────────────────────────────────────
+// Calls Claude API (via proxy or direct) to get a structured JSON describing
+// how the world map changes given the winning scenario. Falls back to a mock
+// if the API key is not configured.
+
+import type { AltHistoryMap } from './altHistoryTypes';
+import { MOCK_ALT_MAP } from './altHistoryTypes';
+
+const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY ?? '';
+
+export async function generateAltHistoryMap(
+  scenario: string,
+  winnerPrediction: string,
+  winnerAIName: string
+): Promise<AltHistoryMap> {
+  // ── Fallback: if no API key, return an enriched mock straight away ──────────
+  if (!ANTHROPIC_KEY) {
+    console.info('[altHistoryMap] No VITE_ANTHROPIC_API_KEY — using mock alt-history map.');
+    return { ...MOCK_ALT_MAP, scenario, winnerAI: winnerAIName };
+  }
+
+  const prompt = `You are a cartographer and alternate history expert for the WHATIF application.
+
+SCENARIO: "${scenario}"
+WINNING AI PREDICTION (${winnerAIName}): "${winnerPrediction}"
+
+Based on this alternate history scenario and the winning prediction, generate a JSON object describing how the WORLD MAP would look different in 2026. This will be used to redraw political borders on a 3D globe.
+
+Focus ONLY on countries and regions that would actually be different. Be historically accurate.
+
+Return ONLY valid JSON (no markdown, no explanation) in this exact format:
+{
+  "scenario": "brief scenario title",
+  "winnerAI": "${winnerAIName}",
+  "globeNarrative": "One sentence shown on the globe (max 80 chars)",
+  "changedRegions": [
+    {
+      "isoA3": "ISO 3166-1 alpha-3 code",
+      "altName": "Name in this timeline",
+      "color": "#hex",
+      "controller": "Controlling entity",
+      "status": "expanded|shrunk|renamed|occupied|liberated|unchanged",
+      "notes": "Brief change note"
+    }
+  ],
+  "disappearedCountries": ["ISO_A3"],
+  "newCountries": [
+    {
+      "name": "Country name",
+      "capital": {"lat": 0.0, "lng": 0.0, "name": "Capital"},
+      "color": "#hex",
+      "coords": [[lat, lng]],
+      "notes": "Why this country exists"
+    }
+  ],
+  "borderChanges": [
+    {"from": "ISO_A3", "to": "entity", "region": "Region", "lat": 0.0, "lng": 0.0}
+  ],
+  "capitalChanges": [
+    {"country": "ISO_A3", "oldCapital": "Old", "newCapital": "New", "lat": 0.0, "lng": 0.0}
+  ]
+}
+
+RULES:
+1. Only include countries that ACTUALLY CHANGE.
+2. ISO A3 codes: TUR=Turkey, DEU=Germany, FRA=France, GBR=UK, RUS=Russia, USA=USA, CHN=China, ITA=Italy, ESP=Spain, POL=Poland, ISR=Israel, IRQ=Iraq, SYR=Syria, EGY=Egypt, IRN=Iran, SAU=Saudi Arabia, JPN=Japan, GRC=Greece.
+3. Ottoman scenarios: TUR expands, ISR disappears, IRQ/SYR become Ottoman.
+4. WW2 Germany scenarios: FRA=occupied, POL=occupied, DEU=expanded.
+5. Colors: Ottoman=#3a1a0a, Nazi=#1a1a1a, Allied=#102030, Soviet=#2a0505.
+6. coords arrays: 6-12 points max.
+7. globeNarrative: under 80 characters.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Claude API ${res.status}`);
+    }
+
+    const data = await res.json();
+    const rawText: string = data?.content?.[0]?.text?.trim() ?? '';
+    // Strip markdown code fences if present
+    const jsonStr = rawText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+    const parsed = JSON.parse(jsonStr) as AltHistoryMap;
+    return parsed;
+  } catch (err) {
+    console.warn('[altHistoryMap] Claude API call failed, using mock:', err);
+    return { ...MOCK_ALT_MAP, scenario, winnerAI: winnerAIName };
+  }
+}
